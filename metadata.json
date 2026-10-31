@@ -1,0 +1,8 @@
+{
+  "name": "Park Boiz",
+  "description": "A Haverford student is trapped in Bryn Mawr’s Park Science Building on Halloween. His friend Ben must navigate from the basement to the third floor, solve simple data-structure challenges, and rescue Mateo before the building’s spooky systems reset.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
