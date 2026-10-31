@@ -13,15 +13,12 @@ interface Section3AthenaChaseProps {
 export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComplete }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [escapeProgress, setEscapeProgress] = useState<number>(0);
-  const [athenaDistance, setAthenaDistance] = useState<number>(300); // pixels behind Ben
-  const [mashPrompt, setMashPrompt] = useState<boolean>(true);
+  const [athenaDistance, setAthenaDistance] = useState<number>(300);
   const [lossBanner, setLossBanner] = useState<string | null>(null);
   const [checkpointStatus, setCheckpointStatus] = useState<string>('START OF 3RD FLOOR');
 
-  // Track total length of chase corridor: 4000 pixels
   const totalTrackLength = 3800;
 
-  // Player physics state
   const playerRef = useRef<{
     x: number;
     y: number;
@@ -48,7 +45,6 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
     isDead: false,
   });
 
-  // Athena Ghost state
   const athenaRef = useRef<{
     x: number;
     y: number;
@@ -57,15 +53,13 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
   }>({
     x: -220,
     y: 330,
-    baseSpeed: 175, // balanced to give player thrilling 60-75s demo chase
+    baseSpeed: 175,
     wobble: 0,
   });
 
-  // Checkpoints along the 3rd floor chase
   const checkpointsRef = useRef<number[]>([80, 1300, 2500]);
   const activeCheckpointIndexRef = useRef<number>(0);
 
-  // Dynamic Obstacles along the chase corridor
   const obstacles = useRef<{
     platforms: { x: number; y: number; width: number; height: number }[];
     ladders: { x: number; y: number; width: number; height: number }[];
@@ -111,7 +105,6 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
 
   const keysDownRef = useRef<{ [key: string]: boolean }>({});
 
-  // Reset to most recent checkpoint
   const respawnAtCheckpoint = useCallback((reason: string) => {
     sound.playHit();
     setLossBanner(reason);
@@ -126,14 +119,11 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
       playerRef.current.sprintBoost = 0;
       playerRef.current.isDead = false;
 
-      // Reset Athena behind player by 350px
       athenaRef.current.x = cpX - 350;
-
       setLossBanner(null);
     }, 500);
   }, []);
 
-  // Keyboard handlers for movement and Spacebar mash boost
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
@@ -141,15 +131,12 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
       }
       keysDownRef.current[e.code] = true;
 
-      // Spacebar repeated press: gives a burst of speed / increases escape progress!
       if (e.code === 'Space' || e.code === 'KeyE') {
         const p = playerRef.current;
         if (!p.isDead) {
-          // Repeated press boost
           p.sprintBoost = Math.min(p.sprintBoost + 60, 220);
           sound.playDash();
 
-          // Jump if grounded
           if (p.isGrounded) {
             p.vy = -460;
             p.isGrounded = false;
@@ -171,7 +158,6 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
     };
   }, []);
 
-  // Main Platforming Chase Loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -189,11 +175,10 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
       const athena = athenaRef.current;
 
       if (!p.isDead) {
-        // Base running speed + mash boost decay
         const keys = keysDownRef.current;
         let baseRun = 180;
         if (keys['KeyD'] || keys['ArrowRight']) baseRun = 210;
-        if (keys['KeyA'] || keys['ArrowLeft']) baseRun = 90; // slow down if running backward
+        if (keys['KeyA'] || keys['ArrowLeft']) baseRun = 90;
 
         p.sprintBoost = Math.max(0, p.sprintBoost - dt * 90);
         const currentSpeed = baseRun + p.sprintBoost;
@@ -201,12 +186,10 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
         p.vx = currentSpeed;
         p.x += p.vx * dt;
 
-        // Gravity & Vertical Movement
         const gravity = 1100;
         p.vy += gravity * dt;
         p.y += p.vy * dt;
 
-        // Check if on ladder
         const touchingLadder = obstacles.current.ladders.some(
           (lad) =>
             p.x + p.width > lad.x &&
@@ -220,7 +203,6 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
           p.isGrounded = true;
         }
 
-        // Floor ground collision (Ground Y = 390)
         let isOverGap = false;
         obstacles.current.gaps.forEach((gap) => {
           if (p.x + p.width > gap.x && p.x < gap.x + gap.width) {
@@ -235,7 +217,6 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
           p.isGrounded = true;
         }
 
-        // Platforms collision
         obstacles.current.platforms.forEach((plat) => {
           const withinX = p.x + p.width > plat.x && p.x < plat.x + plat.width;
           const falling = p.vy >= 0;
@@ -246,37 +227,30 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
           }
         });
 
-        // Bottom pit check
         if (p.y > 480) {
           respawnAtCheckpoint('Fell into broken 3rd floor chasm!');
         }
 
-        // Update Rolling Beakers
         obstacles.current.rollingBeakers.forEach((rb) => {
           rb.x += rb.vx * dt;
-          // Hit check with Ben
           const dist = Math.hypot(p.x + p.width / 2 - rb.x, p.y + p.height / 2 - rb.y);
           if (dist < 18) {
             respawnAtCheckpoint('Tripped on rolling chemistry beaker!');
           }
         });
 
-        // Update Falling Books
         obstacles.current.fallingBooks.forEach((fb) => {
-          // If player is within 140px, trigger book fall
           if (Math.abs(p.x - fb.x) < 140 && !fb.isFalling && fb.y === fb.initialY) {
             fb.isFalling = true;
           }
           if (fb.isFalling) {
             fb.y += 350 * dt;
-            // Hit check with Ben
             if (Math.abs(p.x + p.width / 2 - fb.x) < 20 && Math.abs(p.y + p.height / 2 - fb.y) < 22) {
               respawnAtCheckpoint('Struck by falling library reference books!');
             }
           }
         });
 
-        // Checkpoints Check
         if (p.x >= 2500 && activeCheckpointIndexRef.current < 2) {
           activeCheckpointIndexRef.current = 2;
           sound.playCheckpoint();
@@ -287,29 +261,23 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
           setCheckpointStatus('CHECKPOINT 1 SAVED (LIBRARY CORRIDOR)');
         }
 
-        // Update Athena (The Spooky Bryn Mawr Academic Ghost)
         athena.wobble += dt * 4;
         const distToPlayer = p.x - athena.x;
 
-        // Athena speeds up if player is far, but slows down slightly if close so player has escape chance
         const athenaSpeed = athena.baseSpeed + (distToPlayer > 380 ? 40 : distToPlayer < 180 ? -15 : 10);
         athena.x += athenaSpeed * dt;
         athena.y = 320 + Math.sin(athena.wobble) * 20;
 
-        // Distance state
         const currentDist = Math.max(0, Math.round(p.x - athena.x));
         setAthenaDistance(currentDist);
 
-        // Athena catches Ben!
         if (athena.x >= p.x - 18) {
           respawnAtCheckpoint('Caught by Athena’s Academic Ghost!');
         }
 
-        // Escape Progress (0 to 100%)
         const progressPct = Math.min(100, Math.max(0, Math.round((p.x / totalTrackLength) * 100)));
         setEscapeProgress(progressPct);
 
-        // Reached end of 3rd Floor! (Mateo is found!)
         if (p.x >= totalTrackLength) {
           sound.playVictory();
           onComplete();
@@ -317,79 +285,134 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
         }
       }
 
-      // --- RENDER ATHENA CHASE SCENE ---
+      // --- RENDER PARK SCIENCE 3RD FLOOR MEZZANINE ATMOSPHERE ---
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Camera centered on Ben
       const cameraX = Math.max(0, p.x - 280);
 
       ctx.save();
       ctx.translate(-cameraX, 0);
 
-      // 3rd Floor Library Walls (Dark Midnight Navy/Blue with Halloween Orange Lamps)
-      ctx.fillStyle = '#08081a';
+      // 1. High Ceiling Wall: Modern Academic Science Atrium (White/Slate with Halloween night lighting)
+      ctx.fillStyle = '#1e293b';
       ctx.fillRect(cameraX, 0, canvas.width, canvas.height);
 
-      // Starry Observatory Windows overlooking campus in background
-      for (let wx = Math.floor(cameraX / 240) * 240; wx < cameraX + canvas.width + 240; wx += 240) {
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(wx + 20, 40, 110, 140);
-        ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(wx + 20, 40, 110, 140);
+      // Clerestory Skylights Running Overhead (from photo)
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(cameraX, 0, canvas.width, 30);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(cameraX, 30, canvas.width, 4);
 
-        // Starry night sky in window
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(wx + 45, 65, 2, 2);
-        ctx.fillRect(wx + 80, 85, 2, 2);
-        ctx.fillRect(wx + 60, 120, 3, 3);
-        // Orange moon
-        ctx.fillStyle = '#f97316';
+      for (let sx = Math.floor(cameraX / 180) * 180; sx < cameraX + canvas.width + 180; sx += 180) {
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
         ctx.beginPath();
-        ctx.arc(wx + 95, 65, 12, 0, Math.PI * 2);
+        ctx.moveTo(sx + 30, 0);
+        ctx.lineTo(sx + 90, 0);
+        ctx.lineTo(sx + 65, 30);
+        ctx.lineTo(sx + 5, 30);
+        ctx.closePath();
         ctx.fill();
       }
 
-      // Library Bookshelves Background
-      for (let bx = Math.floor(cameraX / 300) * 300; bx < cameraX + canvas.width + 300; bx += 300) {
-        ctx.fillStyle = '#2e1065';
-        ctx.fillRect(bx + 140, 140, 90, 250);
-        ctx.strokeStyle = '#581c87';
-        ctx.strokeRect(bx + 140, 140, 90, 250);
+      // White Support Columns & Balcony Railings
+      for (let cx = Math.floor(cameraX / 260) * 260; cx < cameraX + canvas.width + 260; cx += 260) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(cx, 30, 18, 360);
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillRect(cx + 4, 30, 8, 360);
+
+        // Cobweb draped on column
+        ctx.strokeStyle = 'rgba(241, 245, 249, 0.45)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx - 10, 35);
+        ctx.lineTo(cx + 15, 60);
+        ctx.stroke();
       }
 
-      // Solid Floor (with Gaps for broken sections)
-      ctx.fillStyle = '#1e1b4b';
+      // Large Glass Windows with Dark Green Mullions (from photo)
+      for (let wx = Math.floor(cameraX / 240) * 240; wx < cameraX + canvas.width + 240; wx += 240) {
+        ctx.fillStyle = '#0b1329';
+        ctx.fillRect(wx + 20, 50, 100, 130);
+        ctx.strokeStyle = '#14532d'; // Dark green frame
+        ctx.lineWidth = 3;
+        ctx.strokeRect(wx + 20, 50, 100, 130);
+
+        // Window panes
+        ctx.strokeStyle = '#166534';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(wx + 70, 50);
+        ctx.lineTo(wx + 70, 180);
+        ctx.moveTo(wx + 20, 115);
+        ctx.lineTo(wx + 120, 115);
+        ctx.stroke();
+
+        // Moon
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(wx + 40, 75, 8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Background Academic Doors (from photo)
+      for (let dx = Math.floor(cameraX / 340) * 340; dx < cameraX + canvas.width + 340; dx += 340) {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(dx + 130, 70, 50, 110);
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(dx + 130, 70, 50, 110);
+        ctx.fillStyle = 'rgba(132, 204, 22, 0.2)';
+        ctx.fillRect(dx + 136, 78, 38, 42);
+        ctx.font = '5px "Press Start 2P", monospace';
+        ctx.fillStyle = '#84cc16';
+        ctx.fillText('CS 304', dx + 138, 135);
+      }
+
+      // Green Pod Chairs along the 3rd floor hallway (from photo)
+      for (let gx = Math.floor(cameraX / 280) * 280; gx < cameraX + canvas.width + 280; gx += 280) {
+        ctx.fillStyle = '#65a30d';
+        ctx.beginPath();
+        ctx.arc(gx + 180, 200, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#365314';
+        ctx.stroke();
+      }
+
+      // Polished Floor (Light Gray/Concrete)
+      ctx.fillStyle = '#94a3b8';
       ctx.fillRect(cameraX, 390, canvas.width, 90);
-      ctx.strokeStyle = '#4338ca';
-      ctx.lineWidth = 3;
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(cameraX, 390, canvas.width, 6);
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 2;
       ctx.strokeRect(cameraX, 390, canvas.width, 90);
 
-      // Clear Gaps
+      // Gaps
       obstacles.current.gaps.forEach((gap) => {
         ctx.clearRect(gap.x, 390, gap.width, 90);
-        ctx.fillStyle = '#030208';
+        ctx.fillStyle = '#05070e';
         ctx.fillRect(gap.x, 390, gap.width, 90);
-        // Hazard warning edge
         ctx.fillStyle = '#ef4444';
         ctx.fillRect(gap.x - 4, 390, 4, 15);
         ctx.fillRect(gap.x + gap.width, 390, 4, 15);
       });
 
-      // Render Elevated Platforms
+      // Platforms (White/Slate Science Benches with Green Trims)
       obstacles.current.platforms.forEach((plat) => {
-        ctx.fillStyle = '#4f46e5';
+        ctx.fillStyle = '#f8fafc';
         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-        ctx.strokeStyle = '#818cf8';
-        ctx.lineWidth = 2;
+        ctx.fillStyle = '#84cc16';
+        ctx.fillRect(plat.x, plat.y, plat.width, 3);
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1.5;
         ctx.strokeRect(plat.x, plat.y, plat.width, plat.height);
       });
 
-      // Render Ladders
+      // Ladders
       obstacles.current.ladders.forEach((lad) => {
-        ctx.strokeStyle = '#f59e0b';
+        ctx.strokeStyle = '#84cc16';
         ctx.lineWidth = 3;
-        // Rails
         ctx.beginPath();
         ctx.moveTo(lad.x, lad.y);
         ctx.lineTo(lad.x, lad.y + lad.height);
@@ -397,7 +420,6 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
         ctx.lineTo(lad.x + lad.width, lad.y + lad.height);
         ctx.stroke();
 
-        // Rungs
         for (let ry = lad.y + 12; ry < lad.y + lad.height; ry += 16) {
           ctx.beginPath();
           ctx.moveTo(lad.x, ry);
@@ -406,9 +428,9 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
         }
       });
 
-      // Render Rolling Beakers
+      // Rolling Beakers
       obstacles.current.rollingBeakers.forEach((rb) => {
-        ctx.fillStyle = '#06b6d4';
+        ctx.fillStyle = '#84cc16';
         ctx.beginPath();
         ctx.arc(rb.x, rb.y, 10, 0, Math.PI * 2);
         ctx.fill();
@@ -416,27 +438,26 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
         ctx.stroke();
       });
 
-      // Render Falling Books
+      // Falling Books
       obstacles.current.fallingBooks.forEach((fb) => {
-        ctx.fillStyle = '#f43f5e';
+        ctx.fillStyle = '#ea580c';
         ctx.fillRect(fb.x - 10, fb.y, 20, 26);
         ctx.strokeStyle = '#ffffff';
         ctx.strokeRect(fb.x - 10, fb.y, 20, 26);
       });
 
-      // Render ATHENA (The Spooky Bryn Mawr Academic Ghost)
+      // ATHENA GHOST
       ctx.save();
-      ctx.shadowColor = '#00f0ff';
+      ctx.shadowColor = '#84cc16';
       ctx.shadowBlur = 25;
 
-      // Eerie Spectral Trail & Aura
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+      ctx.fillStyle = 'rgba(132, 204, 22, 0.35)';
       ctx.beginPath();
       ctx.arc(athena.x - 15, athena.y, 28, 0, Math.PI * 2);
       ctx.fill();
 
       // Ghost Academic Robes
-      ctx.fillStyle = 'rgba(224, 242, 254, 0.95)';
+      ctx.fillStyle = 'rgba(248, 250, 252, 0.95)';
       ctx.beginPath();
       ctx.arc(athena.x, athena.y, 20, Math.PI, 0, false);
       ctx.lineTo(athena.x + 20, athena.y + 36);
@@ -447,41 +468,36 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
       ctx.closePath();
       ctx.fill();
 
-      // Academic Mortarboard Cap
-      ctx.fillStyle = '#1e1b4b';
+      // Academic Cap
+      ctx.fillStyle = '#0f172a';
       ctx.fillRect(athena.x - 18, athena.y - 28, 36, 6);
       ctx.fillRect(athena.x - 8, athena.y - 22, 16, 6);
-      // Tassel
-      ctx.fillStyle = '#facc15';
+      ctx.fillStyle = '#84cc16';
       ctx.fillRect(athena.x + 14, athena.y - 26, 3, 12);
 
-      // Glowing Cyan Ghost Eyes
-      ctx.fillStyle = '#0284c7';
+      // Eyes
+      ctx.fillStyle = '#15803d';
       ctx.beginPath();
       ctx.arc(athena.x + 6, athena.y - 4, 3.5, 0, Math.PI * 2);
       ctx.arc(athena.x + 14, athena.y - 4, 3.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Ghost Label
       ctx.font = '8px "Press Start 2P", monospace';
-      ctx.fillStyle = '#38bdf8';
+      ctx.fillStyle = '#84cc16';
       ctx.textAlign = 'center';
       ctx.fillText('ATHENA GHOST', athena.x, athena.y - 36);
-
       ctx.restore();
 
-      // Render Ben (Player in RED Haverford Hoodie sprinting)
+      // Ben (Player)
       if (!p.isDead) {
         ctx.save();
-        // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
         ctx.beginPath();
         ctx.ellipse(p.x + p.width / 2, p.y + p.height, 14, 5, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Speed trail lines if sprinting
         if (p.sprintBoost > 40) {
-          ctx.strokeStyle = 'rgba(255, 119, 0, 0.6)';
+          ctx.strokeStyle = 'rgba(132, 204, 22, 0.7)';
           ctx.lineWidth = 2;
           ctx.beginPath();
           ctx.moveTo(p.x - 20, p.y + 10);
@@ -491,23 +507,19 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
           ctx.stroke();
         }
 
-        // Bright RED Haverford Hoodie
         ctx.fillStyle = '#dc2626';
         ctx.fillRect(p.x, p.y + 10, p.width, 16);
 
-        // White 'H' on chest
         ctx.font = '8px "Press Start 2P", monospace';
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'center';
         ctx.fillText('H', p.x + p.width / 2, p.y + 22);
 
-        // Running legs
         const runCycle = Math.sin(time * 0.02) * 8;
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(p.x + 2 + runCycle, p.y + 26, 6, 8);
         ctx.fillRect(p.x + p.width - 8 - runCycle, p.y + 26, 6, 8);
 
-        // Head & Beanie
         ctx.fillStyle = '#fed7aa';
         ctx.beginPath();
         ctx.arc(p.x + p.width / 2, p.y + 4, 8, 0, Math.PI * 2);
@@ -522,11 +534,10 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
         ctx.fillStyle = '#f87171';
         ctx.textAlign = 'center';
         ctx.fillText('BEN', p.x + p.width / 2, p.y - 14);
-
         ctx.restore();
       }
 
-      ctx.restore(); // Restore camera translation
+      ctx.restore();
 
       animId = requestAnimationFrame(loop);
     };
@@ -537,8 +548,7 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
 
   return (
     <div className="relative w-full flex flex-col items-center gap-3">
-      {/* Action Platformer Canvas Container */}
-      <div className="relative w-full max-w-4xl bg-black rounded-lg border-4 border-[#ff2a6d] shadow-[0_0_40px_rgba(255,42,109,0.5)] overflow-hidden">
+      <div className="relative w-full max-w-4xl bg-slate-950 rounded-lg border-4 border-[#84cc16] shadow-[0_0_40px_rgba(132,204,22,0.4)] overflow-hidden">
         <canvas
           ref={canvasRef}
           width={900}
@@ -550,14 +560,13 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
         {/* HUD Overlay: Escape Progress & Athena Distance Bar */}
         <div className="absolute top-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 z-20 pointer-events-none">
           
-          {/* Escape Progress Bar */}
-          <div className="bg-[#0b0318]/90 border-2 border-[#00e5ff] rounded-lg p-2 flex items-center gap-3 min-w-[260px] shadow-[0_0_15px_rgba(0,229,255,0.4)]">
-            <span className="font-retro text-[9px] text-[#00e5ff]">
+          <div className="bg-slate-900/90 border-2 border-[#84cc16] rounded-lg p-2 flex items-center gap-3 min-w-[260px] shadow-[0_0_15px_rgba(132,204,22,0.4)]">
+            <span className="font-retro text-[9px] text-[#84cc16]">
               ESCAPE PROGRESS:
             </span>
-            <div className="flex-1 bg-black/60 border border-[#00e5ff] h-4 rounded overflow-hidden p-0.5">
+            <div className="flex-1 bg-black/60 border border-[#84cc16] h-4 rounded overflow-hidden p-0.5">
               <div
-                className="bg-[#00e5ff] h-full rounded transition-all duration-100"
+                className="bg-[#84cc16] h-full rounded transition-all duration-100"
                 style={{ width: `${escapeProgress}%` }}
               ></div>
             </div>
@@ -566,14 +575,13 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
             </span>
           </div>
 
-          {/* Athena Distance Proximity Alert */}
           <div
             className={`border-2 rounded-lg p-2 font-retro text-[9px] flex items-center gap-2 transition-all ${
               athenaDistance < 140
                 ? 'bg-red-950/90 border-red-500 text-red-300 animate-pulse'
                 : athenaDistance < 240
                 ? 'bg-yellow-950/90 border-yellow-500 text-yellow-300'
-                : 'bg-purple-950/90 border-purple-500 text-purple-300'
+                : 'bg-emerald-950/90 border-[#84cc16] text-emerald-300'
             }`}
           >
             <span>👻 ATHENA:</span>
@@ -582,11 +590,10 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
         </div>
 
         {/* Button Mashing Instruction Prompt */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-[#ff7700] text-black font-retro text-[10px] md:text-xs px-5 py-2.5 rounded-full shadow-[0_0_25px_rgba(255,119,0,0.8)] animate-pulse z-20">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-[#84cc16] text-slate-950 font-retro text-[10px] md:text-xs px-5 py-2.5 rounded-full shadow-[0_0_25px_rgba(132,204,22,0.8)] animate-pulse z-20">
           ⚡ MASH [SPACEBAR] OR [E] REPEATEDLY TO SPRINT & ESCAPE!
         </div>
 
-        {/* Hazard / Reset Banner */}
         {lossBanner && (
           <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-[#dc2626] text-white font-retro text-[10px] md:text-xs px-5 py-2.5 rounded-lg shadow-[0_0_20px_rgba(220,38,38,0.8)] animate-bounce text-center z-30">
             💀 {lossBanner}
@@ -595,11 +602,10 @@ export const Section3AthenaChase: React.FC<Section3AthenaChaseProps> = ({ onComp
         )}
       </div>
 
-      {/* Checkpoint Status Bar & Controls */}
-      <div className="w-full max-w-4xl flex flex-wrap items-center justify-between px-2 font-retro text-[9px] text-gray-400 gap-2">
+      <div className="w-full max-w-4xl flex flex-wrap items-center justify-between px-2 font-retro text-[9px] text-slate-400 gap-2">
         <span>MOVE: <strong className="text-white">A, D / ARROWS</strong></span>
-        <span>JUMP & SPRINT: <strong className="text-[#38bdf8]">SPACEBAR (MASH TO BOOST)</strong></span>
-        <span className="text-[#facc15] font-bold">{checkpointStatus}</span>
+        <span>JUMP & SPRINT: <strong className="text-[#84cc16]">SPACEBAR (MASH TO BOOST)</strong></span>
+        <span className="text-amber-400 font-bold">{checkpointStatus}</span>
       </div>
     </div>
   );

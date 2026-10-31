@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GameStage } from './types';
 import { sound } from './services/sound';
 import StartScreen from './components/StartScreen';
@@ -17,7 +17,37 @@ import HUD from './components/HUD';
 export const App: React.FC = () => {
   const [stage, setStage] = useState<GameStage>('TITLE');
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  const [sectionKey, setSectionKey] = useState<number>(0); // Used to force-restart current section cleanly
+  const [sectionKey, setSectionKey] = useState<number>(0);
+
+  // Synchronize BGM tracks with the game stages:
+  // - Intro & Story Cutscene: Spooky, mysterious music
+  // - Game Levels (Sections 1, 2, 3): Really scary horror music
+  // - Final Scene: Cheesy romantic love ballad music
+  useEffect(() => {
+    if (stage === 'TITLE' || stage === 'INTRO_CUTSCENE') {
+      sound.playBGM('SPOOKY_MYSTERY');
+    } else if (stage === 'SECTION_1' || stage === 'SECTION_2' || stage === 'SECTION_3') {
+      sound.playBGM('REALLY_SCARY');
+    } else if (stage === 'FINAL_CUTSCENE' || stage === 'VICTORY') {
+      sound.playBGM('CHEESY_ROMANTIC');
+    }
+  }, [stage]);
+
+  // Ensure AudioContext resumes upon first user interaction
+  useEffect(() => {
+    const unlockAudio = () => {
+      sound.initCtx();
+      if (stage === 'TITLE') {
+        sound.playBGM('SPOOKY_MYSTERY');
+      }
+    };
+    window.addEventListener('click', unlockAudio, { once: true });
+    window.addEventListener('keydown', unlockAudio, { once: true });
+    return () => {
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
+  }, [stage]);
 
   const handleStartGame = () => {
     sound.playBlip();
@@ -61,14 +91,53 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-dvh w-full bg-[#070111] text-white flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden select-none font-vt323">
-      {/* CRT Scanline & Ambient Overlay */}
-      <div className="crt-overlay pointer-events-none fixed inset-0 z-40 opacity-20"></div>
+    <div className="relative min-h-dvh w-full bg-[#090e1a] text-white flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden select-none font-vt323">
+      
+      {/* Background Architectural Aesthetic: Park Science Science Atrium (Photo Resemblance) */}
+      <div className="absolute inset-0 pointer-events-none opacity-20 flex flex-col justify-between overflow-hidden">
+        {/* Upper Mezzanine Balcony & Cable Railings */}
+        <div className="w-full h-28 bg-[#f8fafc] border-b-4 border-[#94a3b8] flex flex-col justify-around px-8 relative">
+          <div className="w-full h-0.5 bg-slate-400"></div>
+          <div className="w-full h-0.5 bg-slate-400"></div>
+          <div className="w-full h-0.5 bg-slate-400"></div>
+          {/* Green Pod Chairs */}
+          <div className="absolute top-4 left-20 w-10 h-10 rounded-full bg-[#65a30d]"></div>
+          <div className="absolute top-4 left-64 w-10 h-10 rounded-full bg-[#65a30d]"></div>
+          <div className="absolute top-4 right-32 w-10 h-10 rounded-full bg-[#65a30d]"></div>
+          {/* Halloween Cobwebs */}
+          <div className="absolute top-16 left-8 text-2xl text-slate-300">🕸️</div>
+          <div className="absolute top-16 right-8 text-2xl text-slate-300">🕸️</div>
+        </div>
 
-      {/* Main Container */}
+        {/* Tall Windows and White Columns on flanks */}
+        <div className="w-full flex-1 flex justify-between px-12 relative">
+          {/* Left White Pillar */}
+          <div className="w-10 h-full bg-[#f8fafc] shadow-2xl"></div>
+          {/* Left Tall Window with dark green frame */}
+          <div className="w-36 h-3/4 border-4 border-[#14532d] bg-[#030712] rounded flex flex-col justify-around p-2 my-auto">
+            <div className="w-full h-0.5 bg-[#166534]"></div>
+            <div className="w-full h-0.5 bg-[#166534]"></div>
+          </div>
+          {/* Right Tall Window with dark green frame */}
+          <div className="w-36 h-3/4 border-4 border-[#14532d] bg-[#030712] rounded flex flex-col justify-around p-2 my-auto">
+            <div className="w-full h-0.5 bg-[#166534]"></div>
+            <div className="w-full h-0.5 bg-[#166534]"></div>
+          </div>
+          {/* Right White Pillar */}
+          <div className="w-10 h-full bg-[#f8fafc] shadow-2xl"></div>
+        </div>
+
+        {/* Lower Polished Floor */}
+        <div className="w-full h-20 bg-[#94a3b8] border-t-2 border-slate-300"></div>
+      </div>
+
+      {/* CRT Scanline & Ambient Overlay */}
+      <div className="crt-overlay pointer-events-none fixed inset-0 z-40 opacity-15"></div>
+
+      {/* Main Arcade Cabinet / Game Stage Container */}
       <div className="relative z-10 w-full max-w-4xl flex flex-col items-center gap-3">
         
-        {/* Title Screen */}
+        {/* Title Screen: Clean Title, Subtitle, and Start Button */}
         {stage === 'TITLE' && (
           <div className="w-full flex items-center justify-center">
             <StartScreen onStart={handleStartGame} />
@@ -118,9 +187,9 @@ export const App: React.FC = () => {
             )}
 
             {/* Footer Lore Indicator */}
-            <div className="w-full flex items-center justify-between text-xs text-gray-500 font-retro px-1">
+            <div className="w-full flex items-center justify-between text-xs text-slate-400 font-retro px-1">
               <span>🎃 PARK SCIENCE BUILDING • BRYN MAWR COLLEGE</span>
-              <span>BEN IN RED HAVERFORD HOODIE</span>
+              <span className="text-[#84cc16]">BEN IN RED HAVERFORD HOODIE</span>
             </div>
           </div>
         )}

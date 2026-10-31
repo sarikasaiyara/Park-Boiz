@@ -16,7 +16,7 @@ interface Section2ChemLabProps {
 export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [clearedModal, setClearedModal] = useState<boolean>(false);
-  const [checkpointStatus, setCheckpointStatus] = useState<string>('CHECKPOINT: START OF LAB');
+  const [checkpointStatus, setCheckpointStatus] = useState<string>('CHECKPOINT: LAB ENTRANCE');
   const [lossBanner, setLossBanner] = useState<string | null>(null);
 
   // Player platformer physics state
@@ -52,37 +52,36 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
   const activeCheckpointIndexRef = useRef<number>(0);
   const keysDownRef = useRef<{ [key: string]: boolean }>({});
 
-  // Level World Configuration (Total width: 1400px x height: 480px, camera tracks Ben)
   const worldWidth = 1450;
   const worldHeight = 480;
 
-  // Solid Platforms
+  // Solid Platforms (White/Slate Modern Academic Lab Benches)
   const staticPlatforms: Platform[] = [
     // Starting dock
-    { x: 0, y: 400, width: 220, height: 80, color: '#331c54' },
-    { x: 260, y: 350, width: 120, height: 25, color: '#4a2578' },
+    { x: 0, y: 400, width: 220, height: 80, color: '#f8fafc' },
+    { x: 260, y: 350, width: 120, height: 25, color: '#e2e8f0' },
     // First high ledge
-    { x: 420, y: 310, width: 100, height: 25, color: '#4a2578' },
+    { x: 420, y: 310, width: 100, height: 25, color: '#e2e8f0' },
     // Intermediate platform (Checkpoint 1)
-    { x: 480, y: 380, width: 140, height: 100, color: '#331c54' },
+    { x: 480, y: 380, width: 140, height: 100, color: '#f8fafc' },
     // Elevated catwalk
-    { x: 670, y: 300, width: 130, height: 25, color: '#4a2578' },
+    { x: 670, y: 300, width: 130, height: 25, color: '#e2e8f0' },
     // Platform between acid vats (Checkpoint 2)
-    { x: 880, y: 330, width: 130, height: 150, color: '#331c54' },
+    { x: 880, y: 330, width: 130, height: 150, color: '#f8fafc' },
     // High lab storage rack
-    { x: 1070, y: 260, width: 120, height: 25, color: '#4a2578' },
+    { x: 1070, y: 260, width: 120, height: 25, color: '#e2e8f0' },
     // Final exit platform
-    { x: 1240, y: 360, width: 210, height: 120, color: '#331c54' },
+    { x: 1240, y: 360, width: 210, height: 120, color: '#f8fafc' },
   ];
 
-  // Moving Platforms
+  // Moving Platforms (Bright lime and white/slate)
   const movingPlatformsRef = useRef<Platform[]>([
     {
       x: 230,
       y: 410,
       width: 80,
       height: 18,
-      color: '#f97316',
+      color: '#84cc16',
       isMoving: true,
       vx: 65,
       vy: 0,
@@ -94,7 +93,7 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
       y: 350,
       width: 75,
       height: 18,
-      color: '#f97316',
+      color: '#84cc16',
       isMoving: true,
       vx: 75,
       vy: 0,
@@ -106,7 +105,7 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
       y: 370,
       width: 75,
       height: 18,
-      color: '#f97316',
+      color: '#84cc16',
       isMoving: true,
       vx: 0,
       vy: -55,
@@ -183,10 +182,8 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
     },
   ]);
 
-  // Exit Door location
   const exitDoor = { x: 1370, y: 280, width: 45, height: 80 };
 
-  // Respawn at latest checkpoint
   const respawnAtCheckpoint = useCallback((reason: string) => {
     sound.playHit();
     setLossBanner(reason);
@@ -211,9 +208,8 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
       }
       keysDownRef.current[e.code] = true;
 
-      // Jump
       if ((e.code === 'Space' || e.code === 'KeyW' || e.code === 'ArrowUp') && playerRef.current.isGrounded && !playerRef.current.isDead) {
-        playerRef.current.vy = -450; // Jump impulse
+        playerRef.current.vy = -450;
         playerRef.current.isGrounded = false;
         sound.playJump();
       }
@@ -248,7 +244,6 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
       const p = playerRef.current;
 
       if (!p.isDead && !clearedModal) {
-        // Horizontal Movement Input
         const keys = keysDownRef.current;
         const moveSpeed = 220;
         let moveX = 0;
@@ -260,11 +255,10 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
           p.facing = moveX > 0 ? 'right' : 'left';
         }
 
-        // Apply Gravity
         const gravity = 1100;
         p.vy += gravity * dt;
 
-        // Update Moving Platforms
+        // Moving platforms
         movingPlatformsRef.current.forEach((mp) => {
           if (mp.vx) {
             mp.x += mp.vx * dt;
@@ -288,7 +282,6 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
           }
         });
 
-        // Compute Bridge state from Switch 1
         const bridgeActive = switchesRef.current.find((s) => s.id === 'sw-catwalk')?.isActivated;
         const bridgePlatform: Platform | null = bridgeActive
           ? { x: 740, y: 340, width: 140, height: 18, color: '#38bdf8' }
@@ -300,16 +293,13 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
           ...(bridgePlatform ? [bridgePlatform] : []),
         ];
 
-        // Horizontal integration
         p.x += p.vx * dt;
         p.x = Math.max(10, Math.min(worldWidth - p.width - 10, p.x));
 
-        // Vertical integration & Collision
         p.y += p.vy * dt;
         p.isGrounded = false;
 
         allPlatforms.forEach((plat) => {
-          // Check collision from above (landing on top)
           const isFallingDown = p.vy >= 0;
           const prevY = p.y - p.vy * dt;
           const withinX = p.x + p.width > plat.x && p.x < plat.x + plat.width;
@@ -319,14 +309,13 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
             p.vy = 0;
             p.isGrounded = true;
 
-            // Carry player if on a moving platform
             if (plat.isMoving && plat.vx) {
               p.x += plat.vx * dt;
             }
           }
         });
 
-        // Check Pressure Plates / Switches
+        // Switches
         switchesRef.current.forEach((sw) => {
           const onSwitch =
             p.x + p.width > sw.x &&
@@ -339,7 +328,7 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
           }
         });
 
-        // Check Falling Lab Equipment
+        // Falling Equipment
         fallingEquipRef.current.forEach((fe) => {
           fe.warningTimer -= dt;
           if (fe.warningTimer <= 0 && !fe.isFalling && !fe.hasLanded) {
@@ -350,17 +339,14 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
             fe.vy += 850 * dt;
             fe.y += fe.vy * dt;
 
-            // Check hit with player
             const dist = Math.hypot(p.x + p.width / 2 - fe.x, p.y + p.height / 2 - fe.y);
             if (dist < fe.radius + 14) {
               respawnAtCheckpoint('Struck by Falling Lab Equipment!');
             }
 
-            // Floor hit
             if (fe.y >= 440) {
               fe.isFalling = false;
               fe.hasLanded = true;
-              // Reset after 2.5s
               setTimeout(() => {
                 fe.y = fe.initialY;
                 fe.vy = 0;
@@ -371,23 +357,22 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
           }
         });
 
-        // Check Acid Pools Collision
+        // Acid Pools
         acidPools.forEach((pool) => {
           if (
             p.x + p.width > pool.x &&
             p.x < pool.x + pool.width &&
             p.y + p.height > pool.y + 4
           ) {
-            respawnAtCheckpoint('Fell into Hazardous Acid Pool!');
+            respawnAtCheckpoint('Fell into Hazardous Chemistry Acid Pool!');
           }
         });
 
-        // Check Bottom Boundary (Falling into abyss)
         if (p.y > worldHeight + 40) {
-          respawnAtCheckpoint('Fell into the Lab Chasm!');
+          respawnAtCheckpoint('Fell off the lab platform!');
         }
 
-        // Check Checkpoints
+        // Checkpoints
         checkpointsRef.current.forEach((cp, idx) => {
           if (!cp.isReached && Math.abs(p.x - cp.x) < 35 && Math.abs(p.y - cp.y) < 60) {
             cp.isReached = true;
@@ -397,7 +382,7 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
           }
         });
 
-        // Check Exit Door
+        // Exit Door
         const exitUnlocked = switchesRef.current.find((s) => s.id === 'sw-exitdoor')?.isActivated;
         if (
           p.x + p.width > exitDoor.x &&
@@ -414,137 +399,184 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
         }
       }
 
-      // --- RENDERING WITH SMOOTH CAMERA TRACKING ---
+      // --- RENDERING PARK SCIENCE LAB ATMOSPHERE ---
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Camera Offset (Keep Ben centered in view)
       const cameraX = Math.max(0, Math.min(worldWidth - canvas.width, p.x - canvas.width / 2));
 
       ctx.save();
       ctx.translate(-cameraX, 0);
 
-      // Background Lab Wall (Dark Purple & Toxic Halloween Hues)
-      ctx.fillStyle = '#0f051c';
+      // 1. Background Wall: Modern Academic Science White/Slate + Dark Green Accents
+      ctx.fillStyle = '#1e293b'; // Night-lit academic wall
       ctx.fillRect(0, 0, worldWidth, worldHeight);
 
-      // Pipework and conduits in background
-      ctx.fillStyle = '#1e0c38';
-      ctx.fillRect(0, 80, worldWidth, 14);
-      ctx.fillRect(0, 140, worldWidth, 8);
+      // Upper architectural ceiling line with white beams
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(0, 0, worldWidth, 24);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(0, 24, worldWidth, 4);
 
-      // Periodic beaker shelves in background
-      for (let x = 120; x < worldWidth; x += 280) {
-        ctx.fillStyle = '#261145';
-        ctx.fillRect(x, 100, 70, 60);
-        ctx.strokeStyle = '#3b186b';
-        ctx.strokeRect(x, 100, 70, 60);
+      // Tall Windows into Night Campus with Dark Green Frames (matching photo)
+      for (let wx = 60; wx < worldWidth; wx += 240) {
+        ctx.fillStyle = '#080d1a';
+        ctx.fillRect(wx, 40, 90, 110);
+        ctx.strokeStyle = '#14532d'; // Dark green frame from photo
+        ctx.lineWidth = 3;
+        ctx.strokeRect(wx, 40, 90, 110);
+
+        // Panes
+        ctx.strokeStyle = '#166534';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(wx + 45, 40);
+        ctx.lineTo(wx + 45, 150);
+        ctx.moveTo(wx, 95);
+        ctx.lineTo(wx + 90, 95);
+        ctx.stroke();
+
+        // Moon glint
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(wx + 20, 65, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Background Academic Doors (from photo)
+      for (let dx = 180; dx < worldWidth; dx += 320) {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(dx, 50, 45, 100);
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(dx, 50, 45, 100);
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
+        ctx.fillRect(dx + 5, 58, 35, 40);
+        ctx.font = '5px "Press Start 2P", monospace';
+        ctx.fillStyle = '#84cc16';
+        ctx.fillText('LAB', dx + 12, 115);
+      }
+
+      // White Support Columns (from photo)
+      for (let cx = 140; cx < worldWidth; cx += 260) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(cx, 0, 16, 260);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(cx + 4, 0, 8, 260);
+
+        // Cobwebs hanging from column capital
+        ctx.strokeStyle = 'rgba(241, 245, 249, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx - 8, 24);
+        ctx.lineTo(cx + 12, 45);
+        ctx.stroke();
       }
 
       // Hanging Chains from the Ceiling
-      for (let cx = 180; cx < worldWidth - 100; cx += 220) {
-        ctx.strokeStyle = '#64748b';
-        ctx.lineWidth = 3;
+      for (let cx = 200; cx < worldWidth - 100; cx += 240) {
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 2;
         ctx.setLineDash([4, 4]);
         ctx.beginPath();
         ctx.moveTo(cx, 0);
-        ctx.lineTo(cx, 220);
+        ctx.lineTo(cx, 200);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // Hanging Flask or Hook
-        ctx.fillStyle = '#f59e0b';
-        ctx.fillRect(cx - 5, 220, 10, 12);
+        ctx.fillStyle = '#84cc16';
+        ctx.fillRect(cx - 5, 200, 10, 12);
       }
 
-      // Render Static Platforms & Ledges
+      // Render Static Platforms (White/Slate Science Benches)
       staticPlatforms.forEach((plat) => {
-        ctx.fillStyle = plat.color || '#331c54';
+        // Platform body
+        ctx.fillStyle = plat.color || '#f8fafc';
         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-        ctx.strokeStyle = '#581c87';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(plat.x, plat.y, plat.width, plat.height);
 
-        // Tech grating accents
-        ctx.fillStyle = '#220f3a';
-        ctx.fillRect(plat.x + 4, plat.y + 4, plat.width - 8, 4);
+        // Green trim edge from photo vibe
+        ctx.fillStyle = '#65a30d';
+        ctx.fillRect(plat.x, plat.y, plat.width, 4);
+
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(plat.x, plat.y, plat.width, plat.height);
       });
 
-      // Render Moving Platforms
+      // Render Moving Platforms (Green and white/slate)
       movingPlatformsRef.current.forEach((mp) => {
-        ctx.fillStyle = '#ea580c';
+        ctx.fillStyle = '#f8fafc';
         ctx.fillRect(mp.x, mp.y, mp.width, mp.height);
-        ctx.strokeStyle = '#fdba74';
+        ctx.strokeStyle = '#84cc16';
         ctx.lineWidth = 2;
         ctx.strokeRect(mp.x, mp.y, mp.width, mp.height);
 
-        // Hazard chevron stripes on platform
-        ctx.fillStyle = '#7c2d12';
+        // Lime Chevron stripes
+        ctx.fillStyle = '#84cc16';
         for (let stripe = 0; stripe < mp.width; stripe += 16) {
           ctx.fillRect(mp.x + stripe, mp.y + 2, 8, mp.height - 4);
         }
       });
 
-      // Render Extended Catwalk Bridge if Switch 1 activated
+      // Safety Bridge Catwalk if activated
       const bridgeActive = switchesRef.current.find((s) => s.id === 'sw-catwalk')?.isActivated;
       if (bridgeActive) {
-        ctx.fillStyle = '#0284c7';
+        ctx.fillStyle = '#38bdf8';
         ctx.fillRect(740, 340, 140, 18);
-        ctx.strokeStyle = '#38bdf8';
+        ctx.strokeStyle = '#0284c7';
         ctx.lineWidth = 2;
         ctx.strokeRect(740, 340, 140, 18);
         ctx.font = '7px "Press Start 2P", monospace';
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = '#0f172a';
         ctx.textAlign = 'center';
-        ctx.fillText('SAFETY CATWALK', 810, 352);
+        ctx.fillText('CATWALK', 810, 352);
       }
 
-      // Render Hazardous Acid Pools (Bubbling Green Slime)
+      // Render Hazardous Chemistry Acid Pools (Bubbling Lime/Green Slime)
       acidPools.forEach((pool) => {
-        // Pool basin
-        ctx.fillStyle = '#0f2913';
+        // Basin
+        ctx.fillStyle = '#064e3b';
         ctx.fillRect(pool.x, pool.y, pool.width, pool.height);
 
-        // Bubbling Slime Surface
-        ctx.fillStyle = '#22c55e';
+        // Slime top
+        ctx.fillStyle = '#84cc16';
         ctx.fillRect(pool.x, pool.y, pool.width, 10);
 
-        // Acid Bubbles
-        const bubbleWave = Math.sin(time * 0.008 + pool.x) * 4;
+        // Bubbles
         for (let b = 10; b < pool.width; b += 25) {
-          const bY = pool.y - 2 + Math.sin(time * 0.006 + b) * 3;
+          const bY = pool.y - 2 + Math.sin(time * 0.007 + b) * 3;
+          ctx.fillStyle = '#bef264';
           ctx.beginPath();
           ctx.arc(pool.x + b, bY, 4, 0, Math.PI * 2);
           ctx.fill();
         }
 
         ctx.font = '6px "Press Start 2P", monospace';
-        ctx.fillStyle = '#86efac';
+        ctx.fillStyle = '#bef264';
         ctx.textAlign = 'center';
-        ctx.fillText('DANGEROUS ACID', pool.x + pool.width / 2, pool.y + 25);
+        ctx.fillText('HAZARDOUS ACID', pool.x + pool.width / 2, pool.y + 25);
       });
 
-      // Render Switches / Pressure Plates
+      // Switches / Pressure Plates
       switchesRef.current.forEach((sw) => {
-        ctx.fillStyle = sw.isActivated ? '#22c55e' : '#f97316';
+        ctx.fillStyle = sw.isActivated ? '#84cc16' : '#eab308';
         ctx.fillRect(sw.x, sw.y + (sw.isActivated ? 4 : 0), sw.width, sw.height - (sw.isActivated ? 4 : 0));
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 1;
         ctx.strokeRect(sw.x, sw.y + (sw.isActivated ? 4 : 0), sw.width, sw.height - (sw.isActivated ? 4 : 0));
 
-        // Switch sign
         ctx.font = '6px "Press Start 2P", monospace';
-        ctx.fillStyle = sw.isActivated ? '#4ade80' : '#fdba74';
+        ctx.fillStyle = sw.isActivated ? '#bef264' : '#fef08a';
         ctx.textAlign = 'center';
         ctx.fillText(sw.isActivated ? 'ON' : 'STEP', sw.x + sw.width / 2, sw.y - 8);
       });
 
-      // Render Checkpoints (Lantern Beacons)
+      // Checkpoint Beacons
       checkpointsRef.current.forEach((cp, idx) => {
         ctx.save();
-        ctx.shadowColor = cp.isReached ? '#facc15' : '#38bdf8';
+        ctx.shadowColor = cp.isReached ? '#84cc16' : '#38bdf8';
         ctx.shadowBlur = 12;
 
-        ctx.fillStyle = cp.isReached ? '#eab308' : '#0284c7';
+        ctx.fillStyle = cp.isReached ? '#84cc16' : '#0284c7';
         ctx.beginPath();
         ctx.arc(cp.x + 10, cp.y - 12, 9, 0, Math.PI * 2);
         ctx.fill();
@@ -556,9 +588,8 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
         ctx.restore();
       });
 
-      // Render Falling Equipment & Warning Shadows
+      // Falling Equipment & Warning
       fallingEquipRef.current.forEach((fe) => {
-        // Floor Warning Shadow
         if (fe.warningTimer > 0 && fe.warningTimer < 1.4) {
           const blink = Math.sin(time * 0.03) > 0;
           ctx.fillStyle = blink ? 'rgba(239, 68, 68, 0.7)' : 'rgba(239, 68, 68, 0.2)';
@@ -572,10 +603,9 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
           ctx.fillText('⚠ FALLING', fe.x, 420);
         }
 
-        // Falling Flask/Beaker
         if (fe.isFalling || fe.warningTimer > 0) {
           ctx.save();
-          ctx.fillStyle = fe.type === 'FLASK' ? '#38bdf8' : '#a855f7';
+          ctx.fillStyle = fe.type === 'FLASK' ? '#38bdf8' : '#84cc16';
           ctx.beginPath();
           ctx.arc(fe.x, fe.y, fe.radius, 0, Math.PI * 2);
           ctx.fill();
@@ -583,17 +613,16 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
           ctx.lineWidth = 2;
           ctx.stroke();
 
-          // Neck of flask
           ctx.fillRect(fe.x - 3, fe.y - fe.radius - 6, 6, 6);
           ctx.restore();
         }
       });
 
-      // Render Exit Door (to 3rd Floor)
+      // Exit Door to 3rd Floor
       const exitUnlocked = switchesRef.current.find((s) => s.id === 'sw-exitdoor')?.isActivated;
       ctx.fillStyle = exitUnlocked ? '#15803d' : '#991b1b';
       ctx.fillRect(exitDoor.x, exitDoor.y, exitDoor.width, exitDoor.height);
-      ctx.strokeStyle = '#facc15';
+      ctx.strokeStyle = '#84cc16';
       ctx.lineWidth = 3;
       ctx.strokeRect(exitDoor.x, exitDoor.y, exitDoor.width, exitDoor.height);
 
@@ -602,43 +631,36 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
       ctx.textAlign = 'center';
       ctx.fillText(exitUnlocked ? 'OPEN ▶' : 'LOCKED', exitDoor.x + exitDoor.width / 2, exitDoor.y - 12);
 
-      // Render Ben (Player)
+      // Render Ben (Player in bright RED Haverford hoodie)
       if (!p.isDead) {
         ctx.save();
-        // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
         ctx.beginPath();
         ctx.ellipse(p.x + p.width / 2, p.y + p.height, 12, 4, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Bright RED Haverford Hoodie
         ctx.fillStyle = '#dc2626';
         ctx.fillRect(p.x, p.y + 10, p.width, 16);
 
-        // White 'H' on chest
         ctx.font = '8px "Press Start 2P", monospace';
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'center';
         ctx.fillText('H', p.x + p.width / 2, p.y + 22);
 
-        // Pants & Shoes
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(p.x + 2, p.y + 26, 7, 8);
         ctx.fillRect(p.x + p.width - 9, p.y + 26, 7, 8);
 
-        // Head & Beanie
         ctx.fillStyle = '#fed7aa';
         ctx.beginPath();
         ctx.arc(p.x + p.width / 2, p.y + 4, 8, 0, Math.PI * 2);
         ctx.fill();
 
-        // Scarlet Haverford Beanie
         ctx.fillStyle = '#991b1b';
         ctx.fillRect(p.x + 2, p.y - 6, p.width - 4, 6);
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(p.x + p.width / 2 - 2, p.y - 8, 4, 3); // Pom-pom
+        ctx.fillRect(p.x + p.width / 2 - 2, p.y - 8, 4, 3);
 
-        // Ben label
         ctx.font = '7px "Press Start 2P", monospace';
         ctx.fillStyle = '#f87171';
         ctx.textAlign = 'center';
@@ -646,7 +668,7 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
         ctx.restore();
       }
 
-      ctx.restore(); // Restore camera translation
+      ctx.restore();
 
       animId = requestAnimationFrame(loop);
     };
@@ -658,7 +680,7 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
   return (
     <div className="relative w-full flex flex-col items-center gap-3">
       {/* Platformer Canvas Container */}
-      <div className="relative w-full max-w-4xl bg-black rounded-lg border-4 border-[#39ff14] shadow-[0_0_35px_rgba(57,255,20,0.3)] overflow-hidden">
+      <div className="relative w-full max-w-4xl bg-slate-950 rounded-lg border-4 border-[#84cc16] shadow-[0_0_35px_rgba(132,204,22,0.3)] overflow-hidden">
         <canvas
           ref={canvasRef}
           width={900}
@@ -677,28 +699,28 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
 
         {/* Level 2 Cleared Modal with Required Exact Message */}
         {clearedModal && (
-          <div className="absolute inset-0 bg-black/85 backdrop-blur-sm z-30 flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-[#170a2c] border-4 border-[#39ff14] shadow-[0_0_35px_rgba(57,255,20,0.6)] p-6 rounded-lg text-center flex flex-col items-center gap-4 animate-in zoom-in-95 duration-150">
+          <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm z-30 flex items-center justify-center p-4">
+            <div className="max-w-md w-full bg-[#0f172a] border-4 border-[#84cc16] shadow-[0_0_35px_rgba(132,204,22,0.6)] p-6 rounded-lg text-center flex flex-col items-center gap-4 animate-in zoom-in-95 duration-150">
               <span className="text-4xl">🧪</span>
-              <div className="px-2.5 py-1 bg-[#39ff14]/20 border border-[#39ff14] text-[#39ff14] font-retro text-[10px] rounded uppercase">
+              <div className="px-2.5 py-1 bg-[#84cc16]/20 border border-[#84cc16] text-[#84cc16] font-retro text-[10px] rounded uppercase">
                 SECTION 2 COMPLETE
               </div>
 
               {/* Exact required message */}
-              <h2 className="text-xl md:text-2xl font-retro text-[#39ff14] leading-snug">
+              <h2 className="text-xl md:text-2xl font-retro text-[#84cc16] leading-snug">
                 “Chemistry lab cleared. Mateo must be on the third floor.”
               </h2>
 
-              <p className="font-vt323 text-lg text-gray-300 leading-tight">
-                Ben vaulted over hazardous acid vats, engaged the safety bridges, and reached the
-                stairwell to the 3rd floor library!
+              <p className="font-vt323 text-lg text-slate-300 leading-tight">
+                Ben navigated the hazardous acid testing vats, engaged the catwalk bridges, and
+                unlocked the stairwell to the 3rd floor science library!
               </p>
 
               <div className="w-full pt-2">
                 <RetroButton
                   onClick={onComplete}
                   variant="accent"
-                  className="w-full text-base py-3.5 !bg-[#39ff14] !border-white !text-black hover:!bg-[#22c55e] shadow-[0_0_20px_rgba(57,255,20,0.6)]"
+                  className="w-full text-base py-3.5 !bg-[#84cc16] !border-white !text-slate-950 hover:!bg-[#65a30d] shadow-[0_0_20px_rgba(132,204,22,0.6)]"
                 >
                   ENTER 3RD FLOOR (ATHENA CHASE) ▶
                 </RetroButton>
@@ -709,10 +731,10 @@ export const Section2ChemLab: React.FC<Section2ChemLabProps> = ({ onComplete }) 
       </div>
 
       {/* Checkpoint Status Bar & Controls */}
-      <div className="w-full max-w-4xl flex flex-wrap items-center justify-between px-2 font-retro text-[9px] text-gray-400 gap-2">
+      <div className="w-full max-w-4xl flex flex-wrap items-center justify-between px-2 font-retro text-[9px] text-slate-400 gap-2">
         <span>MOVE: <strong className="text-white">A, D / ARROWS</strong></span>
-        <span>JUMP: <strong className="text-[#38bdf8]">SPACEBAR / W</strong></span>
-        <span className="text-[#facc15] font-bold">{checkpointStatus}</span>
+        <span>JUMP: <strong className="text-[#84cc16]">SPACEBAR / W</strong></span>
+        <span className="text-amber-400 font-bold">{checkpointStatus}</span>
       </div>
     </div>
   );

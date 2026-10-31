@@ -26,7 +26,7 @@ export const HUD: React.FC<HUDProps> = ({
   const getFloorTitle = () => {
     switch (stage) {
       case 'SECTION_1':
-        return 'FLOOR: 1ST FLOOR (LIBRARY EXPLORATION)';
+        return 'FLOOR: 1ST FLOOR (SCIENCE ATRIUM)';
       case 'SECTION_2':
         return 'FLOOR: 2ND FLOOR (CHEMISTRY LAB)';
       case 'SECTION_3':
@@ -39,7 +39,7 @@ export const HUD: React.FC<HUDProps> = ({
   const getObjectiveText = () => {
     switch (stage) {
       case 'SECTION_1':
-        return 'FIND ENTRANCE TO 2ND FLOOR LAB • TALK TO COSTUMED STUDENTS';
+        return 'EXPLORE ATRIUM • TALK TO COSTUMED STUDENTS • FIND 2ND FL LAB ENTRANCE';
       case 'SECTION_2':
         return 'CROSS ACID VATS • ACTIVATE SWITCHES • REACH 3RD FLOOR STAIRS';
       case 'SECTION_3':
@@ -49,35 +49,22 @@ export const HUD: React.FC<HUDProps> = ({
     }
   };
 
-  const getAccentColor = () => {
-    switch (stage) {
-      case 'SECTION_1':
-        return 'border-[#38bdf8] text-[#38bdf8]';
-      case 'SECTION_2':
-        return 'border-[#39ff14] text-[#39ff14]';
-      case 'SECTION_3':
-        return 'border-[#ff2a6d] text-[#ff2a6d]';
-      default:
-        return 'border-[#ff7700] text-[#ff7700]';
-    }
-  };
-
   return (
     <div className="w-full max-w-4xl flex flex-col gap-2 select-none">
       {/* Top Banner with Floor, Objective, Sound, and Restart */}
-      <div className="w-full bg-[#140624] border-2 border-[#581c87] rounded-lg p-2.5 md:p-3 flex flex-wrap items-center justify-between gap-3 shadow-[0_0_20px_rgba(88,28,135,0.3)]">
+      <div className="w-full bg-[#0f172a]/95 border-2 border-[#84cc16] rounded-lg p-2.5 md:p-3 flex flex-wrap items-center justify-between gap-3 shadow-[0_0_20px_rgba(132,204,22,0.25)]">
         
         {/* Current Floor */}
-        <div className={`px-2.5 py-1 bg-black/50 border rounded font-retro text-[10px] md:text-xs font-bold ${getAccentColor()}`}>
+        <div className="px-2.5 py-1 bg-black/60 border border-[#84cc16] text-[#bef264] rounded font-retro text-[10px] md:text-xs font-bold">
           {getFloorTitle()}
         </div>
 
         {/* Objective Tracker */}
         <div className="flex-1 min-w-[200px] text-center">
-          <div className="font-retro text-[8px] text-gray-400 uppercase tracking-wider">
+          <div className="font-retro text-[8px] text-slate-400 uppercase tracking-wider">
             OBJECTIVE:
           </div>
-          <div className="font-retro text-[10px] md:text-xs text-[#facc15] font-bold tracking-tight">
+          <div className="font-retro text-[10px] md:text-xs text-amber-300 font-bold tracking-tight">
             {getObjectiveText()}
           </div>
         </div>
@@ -88,12 +75,12 @@ export const HUD: React.FC<HUDProps> = ({
           <button
             onClick={onToggleSound}
             title="Toggle Retro Chiptune Audio"
-            className="p-1.5 px-2 bg-[#230c3d] hover:bg-[#391561] border border-[#a855f7] rounded font-retro text-xs text-gray-200 transition-colors"
+            className="p-1.5 px-2 bg-slate-800 hover:bg-slate-700 border border-slate-500 rounded font-retro text-xs text-slate-200 transition-colors"
           >
             {soundEnabled ? '🔊 SFX ON' : '🔇 MUTED'}
           </button>
 
-          {/* Restart Button */}
+          {/* Restart Section Button */}
           <button
             onClick={onRestartSection}
             title="Restart Current Section"
@@ -106,7 +93,7 @@ export const HUD: React.FC<HUDProps> = ({
           <button
             onClick={onRestartGame}
             title="Return to Title Menu"
-            className="px-2.5 py-1 bg-[#475569]/30 hover:bg-[#475569]/50 border border-gray-600 rounded font-retro text-[10px] text-gray-300 transition-all hover:scale-105"
+            className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded font-retro text-[10px] text-slate-300 transition-all hover:scale-105"
           >
             TITLE MENU
           </button>
@@ -115,9 +102,9 @@ export const HUD: React.FC<HUDProps> = ({
 
       {/* Checkpoint Status Bar if present */}
       {checkpointStatus && (
-        <div className="w-full bg-[#0a0214] border border-[#581c87]/60 rounded px-3 py-1 flex items-center justify-between text-[9px] font-retro text-gray-400">
-          <span>CHECKPOINT STATUS: <strong className="text-[#38bdf8]">{checkpointStatus}</strong></span>
-          <span className="text-[#39ff14]">ACTIVE</span>
+        <div className="w-full bg-[#090d16] border border-slate-700 rounded px-3 py-1 flex items-center justify-between text-[9px] font-retro text-slate-400">
+          <span>CHECKPOINT STATUS: <strong className="text-[#84cc16]">{checkpointStatus}</strong></span>
+          <span className="text-[#bef264]">ACTIVE</span>
         </div>
       )}
     </div>
